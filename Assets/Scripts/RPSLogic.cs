@@ -5,18 +5,26 @@ public enum RPSType
     R, P, S
 }
 
-
-
+// This script is used to control the logic of the Rock-Paper-Scissors game
 public class RPSLogic : MonoBehaviour
 {
     private RPSType type;
     public RPSType Type {  get { return type; } }
 
     private RPSView view;
+    private Rigidbody2D rb;
+    private bool isDragging = false;
+    private Vector2 offset;
 
     private void Awake()
     {
         view = GetComponentInChildren<RPSView>();
+        rb = GetComponent<Rigidbody2D>();
+        
+        // Configure Rigidbody2D for mouse movement
+        rb.gravityScale = 0;
+        rb.linearDamping = 5;          // Add some drag to make movement smoother
+        rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;  // Better collision detection
     }
 
     public void Start()
@@ -28,47 +36,51 @@ public class RPSLogic : MonoBehaviour
         view.SetEmoji(type);
     }
 
-
     public void LoseTo(RPSLogic winner)
     {
         type = winner.type;
         view.SetEmoji(winner.type);
     }
 
-    //private void OnTriggerEnter2D(Collider2D collision)
-    //{
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        Debug.Log($"Collision detected between {gameObject.name} and {collision.gameObject.name}");
 
-    //    Debug.Log("Collide Trigger");
+        RPSLogic otherLogic = collision.gameObject.GetComponent<RPSLogic>();
+        if (otherLogic != null)
+        {
+            (RPSLogic winner, RPSLogic loser, bool isTie) = RPSRule.JudgeWinner(this, otherLogic);
 
-    //    (RPSLogic winner, RPSLogic loser, bool isTie) = RPSRule.JudgeWinner(this, collision.gameObject.GetComponent<RPSLogic>());
+            if (!isTie)
+            {
+                loser.LoseTo(winner);
+            }
+        }
+    }
 
-    //    if(!isTie)
-    //    {
-    //        loser.LoseTo(winner);
-    //    }
-    //}
+    private void OnMouseDown()
+    {
+        isDragging = true;
+        offset = rb.position - GetMouseWorldPosition();
+    }
+
+    private void OnMouseUp()
+    {
+        isDragging = false;
+    }
+
+    private Vector2 GetMouseWorldPosition()
+    {
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        return new Vector2(mousePos.x, mousePos.y);
+    }
 
     private void Update()
     {
-        Collider2D collided = Physics2D.OverlapCircle(transform.position, 0.5f);
-
-        if (collided != null)
+        if (isDragging)
         {
-            Debug.Log(collided.gameObject.name);
+            Vector2 targetPos = GetMouseWorldPosition() + offset;
+            rb.MovePosition(targetPos);
         }
     }
-
-    private void OnCollisionStay2D(Collision2D collision)
-    {
-        Debug.Log("Collide Collider");
-
-        (RPSLogic winner, RPSLogic loser, bool isTie) = RPSRule.JudgeWinner(this, collision.gameObject.GetComponent<RPSLogic>());
-
-        if (!isTie)
-        {
-            loser.LoseTo(winner);
-        }
-    }
-
-
 }
