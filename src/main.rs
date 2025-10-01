@@ -1,3 +1,4 @@
+use bevy::input::{keyboard::KeyCode, ButtonInput};
 use bevy::prelude::*;
 use bevy::sprite::Sprite;
 use rand::Rng;
@@ -82,7 +83,7 @@ fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Living RPS".into(),
-                resolution: (650., 950.).into(),
+                resolution: (450., 750.).into(),
                 ..Default::default()
             }),
             ..Default::default()
@@ -93,6 +94,7 @@ fn main() {
         .insert_resource(SpatialHash::default())
         .insert_resource(weights)
         .add_systems(Startup, (setup_camera, initial_spawn))
+        .add_systems(Update, restart_system)
         .add_systems(
             FixedUpdate,
             (
@@ -115,6 +117,29 @@ fn setup_camera(mut commands: Commands) {
 }
 
 fn initial_spawn(mut commands: Commands, config: Res<SimConfig>) {
+    spawn_agents(&mut commands, &config);
+}
+
+fn restart_system(
+    keys: Res<ButtonInput<KeyCode>>,
+    mut commands: Commands,
+    config: Res<SimConfig>,
+    mut run: ResMut<RunState>,
+    mut hash: ResMut<SpatialHash>,
+    agents: Query<Entity, With<Agent>>,
+) {
+    if !keys.just_pressed(KeyCode::KeyR) {
+        return;
+    }
+
+    for entity in agents.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+
+    hash.buckets.clear();
+    hash.cell_size = config.cell_size;
+    *run = RunState::Running;
+
     spawn_agents(&mut commands, &config);
 }
 
