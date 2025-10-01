@@ -82,7 +82,7 @@ fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Living RPS".into(),
-                resolution: (1280., 900.).into(),
+                resolution: (650., 950.).into(),
                 ..Default::default()
             }),
             ..Default::default()
@@ -243,21 +243,21 @@ fn steering_system(
 
         // Global vision: consider all other agents in the world (no distance clamp)
         for (other, otf, oagent) in q_all.iter() {
-            if other == e { continue; }
+            if other == e {
+                continue;
+            }
             let op = otf.translation.truncate();
             let d = op - pos;
             let dist2 = d.length_squared();
-            if dist2 == 0.0 { continue; }
+            if dist2 == 0.0 {
+                continue;
+            }
             let dist = dist2.sqrt();
 
-            if oagent.kind == prey_kind
-                && nearest_prey.map_or(true, |(best, _)| dist < best)
-            {
+            if oagent.kind == prey_kind && nearest_prey.map_or(true, |(best, _)| dist < best) {
                 nearest_prey = Some((dist, d));
             }
-            if oagent.kind == pred_kind
-                && nearest_pred.map_or(true, |(best, _)| dist < best)
-            {
+            if oagent.kind == pred_kind && nearest_pred.map_or(true, |(best, _)| dist < best) {
                 nearest_pred = Some((dist, d));
             }
             if oagent.kind == me.kind && dist <= config.sep_radius {
@@ -350,12 +350,7 @@ fn movement_system(
 
 fn boundary_system(
     config: Res<SimConfig>,
-    mut q: Query<(
-        &mut Transform,
-        &mut Velocity,
-        &Radius,
-        &mut DesiredDir,
-    ), With<Agent>>,
+    mut q: Query<(&mut Transform, &mut Velocity, &Radius, &mut DesiredDir), With<Agent>>,
 ) {
     let half = config.arena_size * 0.5;
     for (mut tf, mut vel, r, mut desired) in q.iter_mut() {
@@ -501,10 +496,7 @@ fn same_kind_nonoverlap_system(
                     .entry(ei)
                     .and_modify(|v| *v -= push)
                     .or_insert(-push);
-                offsets
-                    .entry(ej)
-                    .and_modify(|v| *v += push)
-                    .or_insert(push);
+                offsets.entry(ej).and_modify(|v| *v += push).or_insert(push);
             }
         }
     }
