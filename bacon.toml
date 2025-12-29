@@ -10,6 +10,18 @@
 default_job = "check"
 env.CARGO_TERM_COLOR = "always"
 
+[jobs.run-bevy]
+command = [
+  "cargo",
+  "run",
+  "--features",
+  "bevy/dynamic_linking",
+  # put launch parameters for your program behind a `--` separator
+]
+need_stdout = true
+allow_warnings = true
+background = true
+
 [jobs.check]
 command = ["cargo", "check"]
 need_stdout = false
@@ -42,11 +54,7 @@ need_stdout = false
 # Run clippy in pedantic mode
 # The 'dismiss' feature may come handy
 [jobs.pedantic]
-command = [
-	"cargo", "clippy",
-	"--",
-	"-W", "clippy::pedantic",
-]
+command = ["cargo", "clippy", "--", "-W", "clippy::pedantic"]
 need_stdout = false
 
 # This job lets you run
@@ -59,8 +67,12 @@ need_stdout = true
 
 [jobs.nextest]
 command = [
-    "cargo", "nextest", "run",
-    "--hide-progress-bar", "--failure-output", "final"
+  "cargo",
+  "nextest",
+  "run",
+  "--hide-progress-bar",
+  "--failure-output",
+  "final",
 ]
 need_stdout = true
 analyzer = "nextest"
@@ -74,14 +86,15 @@ need_stdout = false
 [jobs.doc-open]
 command = ["cargo", "doc", "--no-deps", "--open"]
 need_stdout = false
-on_success = "back" # so that we don't open the browser at each change
+on_success = "back"                               # so that we don't open the browser at each change
 
 # You can run your application and have the result displayed in bacon,
 # if it makes sense for this crate.
 [jobs.run]
 command = [
-    "cargo", "run",
-    # put launch parameters for your program behind a `--` separator
+  "cargo",
+  "run",
+  # put launch parameters for your program behind a `--` separator
 ]
 need_stdout = true
 allow_warnings = true
@@ -99,8 +112,9 @@ background = true
 # long running programs (uncomment it if you need it)
 [jobs.run-long]
 command = [
-    "cargo", "run",
-    # put launch parameters for your program behind a `--` separator
+  "cargo",
+  "run",
+  # put launch parameters for your program behind a `--` separator
 ]
 need_stdout = true
 allow_warnings = true
@@ -124,4 +138,5 @@ allow_warnings = true
 [keybindings]
 # alt-m = "job:my-job"
 c = "job:clippy-all" # comment this to have 'c' run clippy on only the default target
-p = "job:pedantic" 
+p = "job:pedantic"
+b = "job:run-bevy"
