@@ -24,9 +24,6 @@ struct Agent {
 struct Velocity(Vec2);
 
 #[derive(Component)]
-struct Speed(f32);
-
-#[derive(Component)]
 struct Radius(f32);
 
 #[derive(Component)]
@@ -105,6 +102,7 @@ fn main() {
                 collision_transform_system,
                 same_kind_nonoverlap_system,
                 winner_check_system,
+                winner_announce_system,
             )
                 .chain(),
         )
@@ -133,7 +131,7 @@ fn restart_system(
     }
 
     for entity in agents.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 
     hash.buckets.clear();
@@ -187,7 +185,6 @@ fn spawn_agents(commands: &mut Commands, config: &SimConfig) {
                 Transform::from_translation(pos),
                 Agent { kind: k },
                 Radius(config.entity_radius),
-                Speed(config.speed),
                 Velocity(random_dir() * config.speed),
                 DesiredDir(random_dir()),
                 Collider,
@@ -569,6 +566,15 @@ fn winner_check_system(mut run: ResMut<RunState>, q: Query<&Agent, With<Agent>>)
             Kind::Scissors
         };
         *run = RunState::Finished(winner);
+    }
+}
+
+fn winner_announce_system(run: Res<RunState>) {
+    if !run.is_changed() {
+        return;
+    }
+    if let RunState::Finished(winner) = *run {
+        info!("Winner: {:?}", winner);
     }
 }
 
